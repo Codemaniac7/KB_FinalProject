@@ -25,4 +25,5 @@ export default {
 @import './assets/css/theme.css';
 @import './assets/css/theme.min.css';
 @import './assets/css/style.bundle';
+
 </style>

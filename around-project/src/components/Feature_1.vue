@@ -34,3 +34,15 @@ const description = ref('투자 성향을 분석하고 <br> 성향 기반 투자
 const buttonText = ref('투자 성향 분석 click');
 const buttonLink = ref('#');
 </script>
+<style>
+.row[data-v-cfb9518a] {
+    --bs-gutter-x: 30px;
+    --bs-gutter-y: 0;
+    display: flex;
+    flex-wrap: wrap;
+    margin-top: calc(-1* var(--bs-gutter-y));
+    margin-right: calc(-0.5* var(--bs-gutter-x));
+    margin-left: calc(-0.5* var(--bs-gutter-x));
+    flex-direction: row-reverse;
+}
+</style>

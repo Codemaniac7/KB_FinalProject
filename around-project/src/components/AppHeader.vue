@@ -1,4 +1,9 @@
 <template>
+<!-- <div class="page-loading active">
+      <div class="page-loading-inner">
+        <div class="page-spinner"></div><span>Loading...</span>
+      </div>
+    </div> -->
   <header class="navbar navbar-expand-lg fixed-top bg-light">
     <div class="container">
      <router-link to="/" class="navbar-brand pe-sm-3">
@@ -8,11 +13,9 @@
           </svg>
         </span>Around
       </router-link>
-
       <button class="navbar-toggler ms-sm-3" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
         <span class="navbar-toggler-icon"></span>
       </button>
-
       <nav class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav navbar-nav-scroll me-auto" style="--ar-scroll-height: 520px;">
           <li v-for="(item, index) in menuItems" :key="index" class="nav-item" :class="{ 'dropdown': item.subItems }">
@@ -131,10 +134,13 @@ const menuItems = ref([
 </script>
 
 <style lang="scss">
-@import '@/assets/scss/_utilities.scss';
-@import '@/assets/scss/components/_dropdown.scss';
-@import '@/assets/scss/components/_navbar.scss';
-@import '@/assets/css/navbar.css';
+// @import '@/assets/scss/_utilities.scss';
+// @import '@/assets/scss/components/_dropdown.scss';
+// @import '@/assets/scss/components/_navbar.scss';
+// @import '@/assets/css/navbar.css';
+// @import "@/assets/scss/_position.scss";
+// @import "@/assets/scss/_containers.scss";
+
 
 // 부트스트랩 색상
 .bg-primary.position-absolute.top-0.start-0.w-100.h-100 {
@@ -149,3 +155,20 @@ const menuItems = ref([
 }
 
 </style>
+
+<style>
+.header.navbar.navbar-expand-lg.fixed-top.bg-light{
+  --ar-navbar-toggler-padding-y: 0.625rem;
+    padding: 0.25rem;
+}
+a.nav-link {
+    color: black;
+}
+</style>
+
+<!-- <style lang="scss" scoped>
+@import '~@/assets/css/navbar.css';
+
+@import '~@/assets/scss/_utilities.scss';
+
+</style> -->

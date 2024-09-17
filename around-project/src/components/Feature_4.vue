@@ -59,4 +59,11 @@
       </svg>
       <div class="dark-mode position-relative zindex-3 text-center px-3 px-sm-0 pb-2 py-sm-3 py-md-4 py-lg-5">
         <h2 class="display-3 pt-xl-2">Get Started with Around</h2>
-       
+      </div>
+</div>
+</section>
+<style>
+section.bg-secondary.pt-2.py-sm-3.py-md-4.py-lg-5 {
+        background-color: #F6F9FC !important;
+}
+</style>

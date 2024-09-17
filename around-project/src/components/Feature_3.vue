@@ -94,5 +94,7 @@ export default {
 </script>
 
 <style scoped>
-/* Add your scoped CSS here */
+section.bg-secondary.pt-2.py-sm-3.py-md-4.py-lg-5 {
+        background-color: #F6F9FC !important;
+}
 </style>
