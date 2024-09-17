@@ -1,11 +1,5 @@
-//
-// Utilities
-// Extends default Bootstrap utility classes
-// Classes with a purpose to reduce the frequency of
-// highly repetitive declarations
-// --------------------------------------------------
+@import '~@/assets/vendor/bootstrap/scss/_functions.scss';
 
-@import 'bootstrap/scss/functions';
 @import 'bootstrap/scss/variables';
 @import 'bootstrap/scss/maps';
 @import 'bootstrap/scss/mixins';
