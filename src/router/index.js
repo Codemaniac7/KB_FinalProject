@@ -3,11 +3,13 @@ import Home from '@/views/Home.vue'
 import Signin from '@/views/Signin.vue'
 import Signup from '@/views/Signup.vue'
 import Analysis from '@/views/Analysis.vue'
+
 import Dictionary from "@/views/menu/dictionary/Dictionary.vue";
 import Savings from "@/views/menu/savings/Savings.vue";
 import Gold from "@/views/menu/gold/Gold.vue";
 import SavingsDetail from "@/views/menu/savings/SavingsDetail.vue";
 import GoldInvest from "@/views/menu/gold/GoldInvest.vue";
+
 
 const routes = [
   {
@@ -32,6 +34,7 @@ const routes = [
     name: 'analysis',
     component: Analysis
   },
+
   {
     path: '/dictionary',
     name: 'dictionary',
@@ -57,6 +60,7 @@ const routes = [
     name: 'goldInvest',
     component: GoldInvest
   },
+
 
   // 필요한 다른 라우트들을 여기에 추가할 수 있습니다.
 ]

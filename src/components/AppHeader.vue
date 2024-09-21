@@ -79,7 +79,9 @@
       </nav>
     </div>
   </header>
+
   <br><br><br><br><br>
+
 </template>
 
 <script setup>
@@ -100,10 +102,12 @@ const menuItems = ref([
       { text: '~~예금', href: 'portfolio-list-v1.html' },
       { text: '~~예금', href: 'portfolio-list-v2.html' },
     ]},
+
     { text: '적금', href: 'savings', subItems: [
       { text: '적금', href: 'savings' },
       { text: '적금 상세', href: 'savingsDetail' },
       { text: '~~~적금', href: 'savings' }
+
     ]},
     { text: '주식', href: '#', subItems: [
       { text: '국내주식', href: 'shop-catalog.html' },
@@ -122,11 +126,14 @@ const menuItems = ref([
     ]}
   ]},
   { text: '투자 커뮤니티', href: 'analysis' },
+
   { text: '용어사전', href: 'dictionary' },
   { text: '추가기능', href: '#', subItems: [
     { text: '금', href: 'gold', subItems: [
       { text: '금 시세', href: 'gold' },
       { text: '금투자', href: 'goldInvest' }
+
+
     ]},
     { text: '환전', href: 'account-overview.html' },
     { text: '~~~ 서비스', href: 'account-settings.html' }
