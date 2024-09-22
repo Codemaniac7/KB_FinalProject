@@ -32,7 +32,7 @@ const badgeText = ref('Take your data to the next level');
 const title = ref('취향대로 투자하자');
 const description = ref('투자 성향을 분석하고 <br> 성향 기반 투자 상품 추천받기');
 const buttonText = ref('투자 성향 분석 click');
-const buttonLink = ref('#');
+const buttonLink = ref('/test-start');
 </script>
 <style>
 .row[data-v-cfb9518a] {

@@ -87,6 +87,7 @@ import { ref } from 'vue';
 const menuItems = ref([
   { text: '투자성향', href: '#', active: true, megaMenu: true, subItems: [
     [
+      { text: '테스트하기', href: 'test-start' },
       { text: '공격투자형', href: 'index.html', bgImage: 'assets/img/megamenu/landings.jpg' },
       { text: '적극투자형', href: 'landing-mobile-app-showcase.html', bgImage: 'assets/img/megamenu/mobile-app.jpg' },
       { text: '위험중립형', href: 'index.html', bgImage: 'assets/img/megamenu/landings.jpg' },
@@ -105,9 +106,7 @@ const menuItems = ref([
       { text: '~~~적금', href: 'shop-catalog.html' }
     ]},
     { text: '주식', href: '#', subItems: [
-      { text: '국내주식', href: 'shop-catalog.html' },
-      { text: '국내주식', href: 'shop-catalog.html' },
-      { text: '국내주식', href: 'shop-catalog.html' }
+      { text: '국내주식', href: 'stock' },
     ]},
     { text: '펀드', href: '#', subItems: [
       { text: '~~~펀드', href: 'shop-catalog.html' },
@@ -125,10 +124,10 @@ const menuItems = ref([
   { text: '추가기능', href: '#', subItems: [
     { text: '금', href: '#', subItems: [
       { text: '금 시세', href: 'account-signin.html' },
-      { text: '금투자', href: 'account-signup.html' }
+      { text: '금투자', href: 'account-signup.html' },
     ]},
     { text: '환전', href: 'account-overview.html' },
-    { text: '~~~ 서비스', href: 'account-settings.html' }
+    { text: '뉴스', href: 'news' },
   ]}
 ]);
 </script>

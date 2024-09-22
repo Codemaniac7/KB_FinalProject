@@ -3,6 +3,11 @@ import Home from '@/views/Home.vue'
 import Signin from '@/views/Signin.vue'
 import Signup from '@/views/Signup.vue'
 import Analysis from '@/views/Analysis.vue'
+import NewsPage from '@/views/NewsPage.vue'
+import TestStartPage from '@/views/TestStartPage.vue'
+import TestProcessPage from '@/views/TestProcessPage.vue'
+import TestResultPage from '@/views/TestResultPage.vue'
+import StockPage from '@/views/StockPage.vue'
 
 const routes = [
   {
@@ -27,7 +32,31 @@ const routes = [
     name: 'analysis',
     component: Analysis
   },
-
+  {
+    path: '/news',
+    name: 'NewsPage',
+    component: NewsPage
+  },
+  {
+    path: '/test-start',
+    name: 'TestStartPage',
+    component: TestStartPage
+  },
+  {
+    path: '/test-process',
+    name: 'TestProcessPage',
+    component: TestProcessPage
+  },
+  {
+    path: '/test-result',
+    name: 'TestResultPage',
+    component: TestResultPage
+  },
+  {
+    path: '/stock',
+    name: 'StockPage',
+    component: StockPage
+  },
   // 필요한 다른 라우트들을 여기에 추가할 수 있습니다.
 ]
 

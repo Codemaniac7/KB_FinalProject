@@ -20,6 +20,6 @@ export default {
     Feature_2,
     Feature_3,
     // Feature_4
-  }
+  },
 }
 </script>

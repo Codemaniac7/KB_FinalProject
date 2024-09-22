@@ -1,0 +1,259 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.kb.board.mapper.BoardMapper">
+    <resultMap type="com.kb.board.dto.BoardCategory" id="boardCategoryResultMap">
+        <result property="type" column="type"/>
+        <result property="name" column="name"/>
+        <result property="level" column="level"/>
+        <result property="orderNo" column="order_no"/>
+    </resultMap>
+
+    <resultMap type="com.kb.board.dto.Board" id="boardResultMap">
+        <id property="bno" column="bno"/>
+        <result property="mno" column="member_mno"/>
+        <result property="type" column="board_category_type"/>
+        <result property="title" column="title"/>
+        <result property="content" column="content"/>
+        <result property="memberId" column="member_id"/>
+        <result property="memberName" column="name"/>
+        <result property="readCount" column="read_count"/>
+        <result property="status" column="status"/>
+        <result property="createDate" column="create_date"/>
+        <result property="modifyDate" column="modify_date"/>
+    </resultMap>
+
+
+    <resultMap type="com.kb.board.dto.Board" id="boardDetailResultMap" extends="boardResultMap">
+        <collection property="replyList"
+                    javaType="arraylist"
+                    ofType="com.kb.board.dto.BoardReply"
+                    column="bno"
+                    select="selectReplyByBno"/>
+        <collection property="boardAttachFileList"
+                    javaType="arraylist"
+                    ofType="com.kb.board.dto.BoardAttachFile"
+                    column="bno"
+                    select="selectAttachFileByBno"/>
+    </resultMap>
+
+    <resultMap type="com.kb.board.dto.BoardAttachFile" id="boardAttachFileResultMap">
+        <id property="fno" column="fno"/>
+        <result property="bno" column="board_bno"/>
+        <result property="originalFilename" column="original_filename"/>
+        <result property="renamedFilename" column="renamed_filename"/>
+        <result property="contentType" column="content_type"/>
+        <result property="size" column="size"/>
+        <result property="createDate" column="create_date"/>
+    </resultMap>
+
+    <resultMap type="com.kb.board.dto.BoardReply" id="boardReplyResultMap">
+        <result property="rno" column="rno" />
+        <result property="bno" column="board_bno" />
+        <result property="mno" column="member_mno" />
+        <result property="memberId" column="member_id" />
+        <result property="memberName" column="name" />
+        <result property="content" column="content" />
+        <result property="status" column="status" />
+        <result property="createDate" column="create_date" />
+        <result property="modifyDate" column="modify_date" />
+    </resultMap>
+
+    <!-- board 카테고리 가져오는 select문 -->
+    <select id="selectBoardCategory" resultMap="boardCategoryResultMap">
+        select * from board_category order by order_no;
+    </select>
+
+    <!--
+    ■ 리스트 구현 - 필수 2종 세트
+    selectBoardList : list를 뽑을때 사용하는데, 페이징, 검색 조건이 모두 포함된 동적 쿼리, 컬럼의 갯수는 꼭 보여줄 것만 선언
+    selectBoardCount : selectBoardList와 쌍으로 갯수를 세오는 Count문, 검색조건이 selectBoardList 일치 해야함
+    -->
+    <select id="selectBoardList" parameterType="com.kb.board.dto.BoardParam" resultMap="boardResultMap">
+     <![CDATA[
+        select
+            distinct b.bno, b.board_category_type, b.title, m1.id as member_id, m1.name,
+            b.read_count, b.status, b.create_date, c.level
+        from board b
+        left outer join member m1 on b.member_mno = m1.mno
+        left outer join board_reply r on r.board_bno = b.bno
+        left outer join member m2 on r.member_mno = m2.mno
+        join board_category c on (b.board_category_type = c.type)
+        where]]>
+        b.status = 'y' <!-- 1=1을 사용해도 무관  -->
+        <if test="types != null">
+            and b.board_category_type in
+            <foreach item="item" collection="types" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="searchType == 'writer'">
+            and m1.id like '%${searchValue}%'
+        </if>
+        <if test="searchType == 'title'">
+            and b.title like '%${searchValue}%'
+        </if>
+        <if test="searchType == 'content'">
+            and b.content like '%${searchValue}%'
+        </if>
+        <if test="searchType == 'all'">
+            and(
+                b.title like '%${searchValue}%'
+                or b.content like '%${searchValue}%'
+                or m1.id like '%${searchValue}%'
+                or m1.name like '%${searchValue}%'
+                or r.content like '%${searchValue}%'
+                or m2.id like '%${searchValue}%'
+                or m2.name like '%${searchValue}%'
+            )
+        </if>
+        order by c.level, b.bno desc limit ${limit} offset ${offset}
+    </select>
+
+    <select id="selectBoardCount" parameterType="com.kb.board.dto.BoardParam" resultType="int">
+        select count(distinct b.bno)
+        from board b
+        left outer join member m1 on b.member_mno = m1.mno
+        left outer join board_reply r on r.board_bno = b.bno
+        left outer join member m2 on r.member_mno = m2.mno
+        join board_category c on (b.board_category_type = c.type)
+        where
+        b.status = 'y' <!-- 1=1을 사용해도 무관  -->
+        <if test="types != null">
+            and b.board_category_type in
+            <foreach  item="item" collection="types" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="searchType == 'writer'">
+            and m1.id like '%${searchValue}%'
+        </if>
+        <if test="searchType == 'title'">
+            and b.title like '%${searchValue}%'
+        </if>
+        <if test="searchType == 'content'">
+            and b.content like '%${searchValue}%'
+        </if>
+        <if test="searchType == 'all'">
+            and(
+                b.title like '%${searchValue}%'
+                or b.content like '%${searchValue}%'
+                or m1.id like '%${searchValue}%'
+                or m1.name like '%${searchValue}%'
+                or r.content like '%${searchValue}%'
+                or m2.id like '%${searchValue}%'
+                or m2.name like '%${searchValue}%'
+            )
+        </if>
+    </select>
+
+    <!-- 상세보기 용도, 모든 인자를 가져와야한다. -->
+    <select id="selectBoardByBno" parameterType="long" resultMap="boardDetailResultMap">
+        select
+            b.bno, b.board_category_type, m.id as member_id, m.name, b.title, b.content,
+            b.read_count, b.create_date, b.modify_date
+        from board b
+            join member m on (b.member_mno = m.mno)
+        where b.status = 'y' and b.bno = #{bno}
+    </select>
+
+    <!-- 게시판 insert용, selectKey(insert 이후의 key를 받아오는 쿼리문) 추가한 버전 -->
+    <insert id="insertBoard" parameterType="com.kb.board.dto.Board">
+        <selectKey keyProperty="bno" resultType="int" order="AFTER">
+            SELECT @@identity as bno
+        </selectKey>
+        insert into board (bno, member_mno, board_category_type, title, content)
+        values(default, #{mno}, #{type}, #{title}, #{content})
+    </insert>
+
+
+    <update id="updateBoard" parameterType="com.kb.board.dto.Board">
+        update board set
+            board_category_type=#{type}, title=#{title}, content=#{content}, modify_date = current_timestamp
+        where bno = #{bno}
+    </update>
+
+
+    <!-- 게시글 조회시 readCount 갱신용 -->
+    <update id="updateReadCount" parameterType="com.kb.board.dto.Board">
+        update board set
+            read_count = #{readCount}
+        where bno = #{bno}
+    </update>
+
+    <!-- 게시글 삭제용 update문 -->
+    <update id="deleteBoard" parameterType="long">
+        update board set
+            status = 'n'
+        where bno = #{bno}
+    </update>
+
+    <!-- 파일 첨부 관련 DML -->
+
+    <!-- 파일 가져오기 -->
+    <select id="selectAttachFileByFno" parameterType="long" resultMap="boardAttachFileResultMap">
+        select
+            fno, board_bno, original_filename, renamed_filename, content_type, size, create_date
+        from board_attach_file
+        where fno = #{fno}
+    </select>
+
+    <!-- 파일 리스트 -->
+    <select id="selectAttachFileByBno" resultMap="boardAttachFileResultMap">
+        select
+            fno, board_bno, original_filename, renamed_filename, content_type, size, create_date
+        from board_attach_file
+        where board_bno = #{bno}
+    </select>
+
+    <!-- 파일 첨부 -->
+    <insert id="insertAttachFile" parameterType="com.kb.board.dto.BoardAttachFile">
+        INSERT INTO BOARD_ATTACH_FILE
+            (fno, board_bno, original_filename, renamed_filename, content_type, size, create_date)
+        VALUES(default, #{bno}, #{originalFilename}, #{renamedFilename}, #{contentType}, ${size}, DEFAULT)
+    </insert>
+
+    <!-- 파일 삭제 -->
+    <delete id="deleteAttachFile" parameterType="long">
+        delete from board_attach_file where fno = #{fno}
+    </delete>
+
+    <!-- 댓글 등록 -->
+    <insert id="insertReply" parameterType="com.kb.board.dto.BoardReply">
+        <selectKey keyProperty="rno" resultType="int" order="AFTER">
+            SELECT @@identity as rno
+        </selectKey>
+        insert into board_reply(
+            rno, board_bno, member_mno, content, status,
+            create_date, modify_date)
+        VALUES(
+                  default, #{bno}, #{mno}, #{content},
+                  default, default, default
+              )
+    </insert>
+
+    <!-- 댓글 리스트 -->
+    <select id="selectReplyByBno" resultMap="boardReplyResultMap" >
+        select
+            r.rno, r.board_bno, r.content, m.id as member_id, m.name, r.create_date, r.modify_date
+        from board_reply r
+        join member m on(r.member_mno = m.mno)
+        where r.status='y' and r.board_bno = #{bno}
+        order by r.rno desc
+    </select>
+
+    <select id="selectReplyByRno" parameterType="long" resultType="com.kb.board.dto.BoardReply">
+        select
+            r.rno, r.board_bno, r.content, m.id as member_id, m.name, r.create_date, r.modify_date
+        from board_reply r
+        join member m on(r.member_mno = m.mno)
+        where r.status='y' and r.rno = #{rno}
+    </select>
+
+    <delete id="deleteReply" parameterType="long">
+        delete from board_reply where rno = #{rno}
+    </delete>
+
+</mapper>

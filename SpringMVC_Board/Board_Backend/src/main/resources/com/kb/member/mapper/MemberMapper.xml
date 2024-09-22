@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.kb.member.mapper.MemberMapper">
+
+    <resultMap id="memberResultMap"  type="com.kb.member.dto.Member">
+        <id property="mno" 				column="mno" />
+        <result property="id"		    column="id" />
+        <result property="password"		column="password" />
+        <result property="name" 		column="name" />
+        <result property="email" 		column="email" />
+        <result property="status" 		column="status" />
+        <result property="createDate"	column="create_date" />
+        <result property="modifyDate"	column="modify_date" />
+        <collection property="authorities"
+                    javaType="arraylist"
+                    ofType="org.springframework.security.core.authority.SimpleGrantedAuthority"
+                    resultMap="authoritiesMap"/>
+    </resultMap>
+
+    <resultMap type="org.springframework.security.core.authority.SimpleGrantedAuthority" id="authoritiesMap">
+        <constructor>
+            <arg column="authority" javaType="string"/>
+        </constructor>
+    </resultMap>
+
+    <select id="selectMemberAll" resultMap="memberResultMap">
+        SELECT
+            mno, m.id, password, name, email, status, create_date, modify_date, a.authority
+        FROM
+            member m
+            LEFT OUTER JOIN member_auth a ON m.id = a.id
+        WHERE m.status = 'y'
+    </select>
+
+
+    <select id="selectById" resultMap="memberResultMap" parameterType="string">
+        SELECT
+            mno, m.id, password, name, email, status, create_date, modify_date, a.authority
+        FROM
+            member m
+            LEFT OUTER JOIN member_auth a ON m.id = a.id
+        WHERE m.status = 'y' and m.id = #{id}
+    </select>
+
+    <insert id="insertMember" parameterType="com.kb.member.dto.Member">
+        INSERT INTO member(mno, id, password, name, email, status)
+        VALUES(default, #{id}, #{password}, #{name}, #{email}, default)
+    </insert>
+
+
+    <update id="updateMember" parameterType="com.kb.member.dto.Member">
+        UPDATE member
+        SET
+            name = #{name},
+            email = #{email},
+            modify_date = now()
+        WHERE mno = #{mno}
+    </update>
+
+
+    <update id="updatePassword" parameterType="com.kb.member.dto.Member">
+        UPDATE member
+        SET
+            password = #{newPassword},
+            modify_date = now()
+        WHERE id = #{id}
+    </update>
+
+<!--    <delete id="deleteMember">-->
+<!--        DELETE FROM member-->
+<!--        WHERE mno = #{mno}-->
+<!--    </delete> -->
+
+    <update id="deleteMember" parameterType="long">
+        UPDATE member
+        SET
+            status = 'n',
+            modify_date = now()
+        WHERE mno = #{mno}
+    </update>
+
+    <insert id="insertAuth"  parameterType="com.kb.member.dto.Auth">
+        INSERT INTO member_auth(id, authority)
+        VALUES(#{id}, #{authority})
+    </insert>
+
+    <delete id="deleteAuth"  parameterType="com.kb.member.dto.Auth">
+        DELETE FROM  member_auth
+        WHERE id = #{id} AND authority = #{auth}
+    </delete>
+</mapper>
