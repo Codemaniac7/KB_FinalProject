@@ -1,4 +1,9 @@
 {
+<<<<<<< HEAD
+  "dependencies": {
+    "bootstrap": "^5.3.0"
+  }
+=======
   "name": "around-project",
   "version": "0.1.0",
   "private": true,
@@ -54,4 +59,5 @@
     "not dead",
     "not ie 11"
   ]
+>>>>>>> 7c2dbdb6ab3fd66842e571ae8776d0dfd2baa4a9
 }

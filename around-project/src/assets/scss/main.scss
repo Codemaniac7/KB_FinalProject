@@ -1,0 +1,25 @@
+// Bootstrap 설정
+@import "../vendor/bootstrap/scss/functions";
+@import "../vendor/bootstrap/scss/variables";
+@import "../vendor/bootstrap/scss/maps";
+@import "../vendor/bootstrap/scss/mixins";
+@import "../vendor/bootstrap/scss/utilities";
+
+// 커스텀 변수 (Bootstrap 변수 오버라이드)
+@import 'variables';
+
+// Bootstrap 그리드 시스템
+@import "../vendor/bootstrap/scss/grid";
+
+// 기존 SCSS 파일들
+@import 'utilities';
+@import 'components/navbar';
+
+// 기타 전역 스타일
+body {
+  font-family: 'Arial', sans-serif;
+  line-height: 1.6;
+  color: #333;
+}
+
+// 추가 전역 스타일...
