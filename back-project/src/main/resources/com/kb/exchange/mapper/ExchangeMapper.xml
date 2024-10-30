@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.kb.exchange.mapper.ExchangeMapper">
+
+    <resultMap id="ExchangeResultMap" type="com.kb.exchange.dto.Exchange">
+        <id property="rateId" column="rate_id"/>
+        <result property="currencyId" column="currency_id"/>
+        <result property="receivingPrice" column="buy_rate"/>
+        <result property="sendingPrice" column="sell_rate"/>
+        <result property="basePrice" column="base_rate"/>
+        <result property="exchangeRateDate" column="exchange_date"/>
+    </resultMap>
+
+    <resultMap id="ExchangeFeeResultMap" type="com.kb.exchange.dto.ExchangeFeeDTO">
+        <result property="currencyCode" column="currency_code"/>
+        <result property="bankName" column="bank_name"/>
+        <result property="bankUrl" column="bank_url"/>
+        <result property="buyingFee" column="buy_fee"/>
+        <result property="sellingFee" column="sell_fee"/>
+        <result property="baseDate" column="base_date"/>
+    </resultMap>
+
+    <resultMap id="ExchangeListResultMap" type="com.kb.exchange.dto.ExchangeListByTerm">
+        <result property="currencyName" column="currency_name"/>
+        <result property="currencyCode" column="currency_code"/>
+        <collection property="exchangeList" ofType="com.kb.exchange.dto.Exchange">
+            <result property="currencyId" column="currency_id"/>
+            <result property="receivingPrice" column="buy_rate"/>
+            <result property="sendingPrice" column="sell_rate"/>
+            <result property="basePrice" column="base_rate"/>
+            <result property="exchangeRateDate" column="exchange_date"/>
+        </collection>
+    </resultMap>
+
+    <resultMap id="ExchangeDailyResultMap" type="com.kb.exchange.dto.ExchangeDailyDTO">
+        <result property="dailyChangeRate" column="dailyChangeRate"/>
+        <result property="baseRateDifference" column="baseRateDifference"/>
+        <association property="currency" javaType="com.kb.exchange.dto.Currency">
+            <result property="currencyName" column="currency_name"/>
+            <result property="currencyCode" column="currency_code"/>
+        </association>
+        <association property="exchange" javaType="com.kb.exchange.dto.Exchange">
+            <result property="rateId" column="rate_id"/>
+            <result property="currencyId" column="currency_id"/>
+            <result property="receivingPrice" column="buy_rate"/>
+            <result property="sendingPrice" column="sell_rate"/>
+            <result property="basePrice" column="base_rate"/>
+            <result property="exchangeRateDate" column="exchange_date"/>
+        </association>
+    </resultMap>
+
+    <select id="getCurrenyIdByCurUnit" resultType="int" parameterType="String">
+        SELECT
+            currency_id
+        FROM
+            currency
+        WHERE
+            currency_code = SUBSTRING(#{curUnit}, 1, 3)
+    </select>
+
+
+    <select id="getExchangeDetailByTerm" resultMap="ExchangeListResultMap">
+        SELECT
+            er.currency_id,
+            er.buy_rate,
+            er.sell_rate,
+            er.base_rate,
+            er.exchange_date,
+            c.currency_name,
+            c.currency_code
+        FROM
+            EXCHANGE_RATES er
+                JOIN
+            currency c ON er.currency_id = c.currency_id
+        WHERE
+            er.currency_id = #{currencyId}
+          AND
+                er.exchange_date >=
+                CASE
+                    WHEN #{term} = '1month' THEN DATE_SUB(NOW(), INTERVAL 1 MONTH)
+                    WHEN #{term} = '3months' THEN DATE_SUB(NOW(), INTERVAL 3 MONTH)
+                    WHEN #{term} = '6months' THEN DATE_SUB(NOW(), INTERVAL 6 MONTH)
+                    WHEN #{term} = '1year' THEN DATE_SUB(NOW(), INTERVAL 1 YEAR)
+                    ELSE NOW()
+                    END
+        ORDER BY
+            er.exchange_date;
+    </select>
+
+    <select id="getDailyExchange" resultMap="ExchangeDailyResultMap">
+        SELECT
+    <![CDATA[
+            current.rate_id,
+            current.currency_id,
+            c.currency_name,
+            c.currency_code,
+            current.buy_rate,
+            current.sell_rate,
+            current.base_rate,
+            current.exchange_date,
+            CASE
+                WHEN previous.base_rate IS NOT NULL THEN
+                    (current.base_rate - previous.base_rate) * 100 / previous.base_rate
+                ELSE
+                    NULL
+                END AS dailyChangeRate,
+            CASE
+                WHEN previous.base_rate IS NOT NULL THEN
+                    current.base_rate - previous.base_rate
+                ELSE
+                    NULL
+                END AS baseRateDifference
+        FROM
+            (
+                SELECT
+                    rate_id,
+                    currency_id,
+                    buy_rate,
+                    sell_rate,
+                    base_rate,
+                    exchange_date,
+                    ROW_NUMBER() OVER (PARTITION BY currency_id ORDER BY exchange_date DESC) AS rn
+                FROM
+                    EXCHANGE_RATES
+                WHERE
+                    exchange_date <= NOW()
+
+
+            ) AS current
+                LEFT JOIN
+            (
+                SELECT
+                    rate_id,
+                    currency_id,
+                    buy_rate,
+                    sell_rate,
+                    base_rate,
+                    exchange_date,
+                    ROW_NUMBER() OVER (PARTITION BY currency_id ORDER BY exchange_date DESC) AS rn
+                FROM
+                    EXCHANGE_RATES
+                WHERE
+                    exchange_date <= NOW()
+            ) AS previous
+            ON current.currency_id = previous.currency_id
+                AND previous.rn = 2
+                JOIN currency c ON current.currency_id = c.currency_id
+        WHERE current.rn = 1
+          AND current.currency_id = #{currencyId}
+        ]]>
+    </select>
+
+
+
+    <insert id="insertExchangeRate" parameterType="java.util.List">
+        INSERT INTO
+            EXCHANGE_RATES (currency_id, buy_rate, sell_rate, base_rate, exchange_date)
+        VALUES
+        <foreach collection="list" item="exchange" separator=",">
+            (#{exchange.currencyId}, #{exchange.receivingPrice}, #{exchange.sendingPrice}, #{exchange.basePrice}}, #{exchange.exchangeRateDate})
+        </foreach>
+    </insert>
+
+    <select id="checkExistExchangeFee" resultType="int">
+        SELECT COUNT(*)
+        FROM BANK_EXCHANGE_FEES
+        WHERE currency_id = #{currencyId}
+          AND bank_id = #{bankId}
+    </select>
+
+    <select id="checkSameExchangeFee" resultType="int" parameterType="com.kb.exchange.dto.ExchangeFee">
+        SELECT COUNT(*)
+        FROM BANK_EXCHANGE_FEES
+        WHERE currency_id = #{currencyId}
+          AND bank_id = #{bankId}
+          AND buy_fee = #{buyingFee}
+          AND sell_fee = #{sellingFee}
+          AND base_date = #{baseDate}
+    </select>
+
+    <update id="batchUpdateExchangeFees" parameterType="java.util.List">
+        <foreach collection="list" item="fee" separator=";">
+            UPDATE BANK_EXCHANGE_FEES
+            SET buy_fee = #{fee.buyingFee}, sell_fee = #{fee.sellingFee}, base_date = #{fee.baseDate}
+            WHERE currency_id = #{fee.currencyId} AND bank_id = (#{fee.bankId}
+        </foreach>
+    </update>
+
+
+    <insert id="batchInsertExchangeFees" parameterType="java.util.List">
+        INSERT INTO BANK_EXCHANGE_FEES(currency_id, bank_id, buy_fee, sell_fee, base_date)
+        VALUES
+        <foreach collection="list" item="fee" separator=",">
+            (#{fee.currencyId}, #{fee.bankId}, #{fee.buyingFee}, #{fee.sellingFee}, #{fee.baseDate})
+        </foreach>
+    </insert>
+
+    <select id="checkCurrencyExists" resultType="int" parameterType="String">
+        SELECT COUNT(*)
+        FROM currency
+        WHERE currency_code = #{currencyCode}
+    </select>
+
+    <select id="checkBankExists" resultType="int" parameterType="String">
+        SELECT COUNT(*)
+        FROM BANKS
+        WHERE bank_name = #{bankName}
+    </select>
+
+
+
+    <select id="getExchangeFeeByCurrency" resultMap="ExchangeFeeResultMap">
+        SELECT
+            c.currency_code, b.bank_name, b.bank_url, e.buy_fee, e.sell_fee, e.base_date
+        FROM
+            BANK_EXCHANGE_FEES e
+        INNER JOIN
+            CURRENCY c
+        ON
+            c.currency_id = e.currency_id
+        INNER JOIN
+            BANKS b
+        ON
+            b.bank_id = e.bank_id
+        WHERE
+            e.currency_id = #{currencyId}
+    </select>
+
+    <select id="getExchangeBankCategory" resultType="com.kb.exchange.dto.Currency">
+        SELECT *
+        FROM currency
+        WHERE currency_id IN (SELECT DISTINCT currency_id FROM bank_exchange_fees);
+    </select>
+
+    <select id="getCurrencyCategory" resultType="com.kb.exchange.dto.Currency">
+        SELECT
+            *
+        FROM currency;
+    </select>
+</mapper>

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.kb.stock.mapper.StockCandleMapper">
+    <select id="getStockData" resultType="com.kb.stock.dto.StockCandleDTO">
+        SELECT stock_code, stock_candle_day, stock_candle_open, stock_candle_close,
+               stock_candle_high, stock_candle_low, stock_candle_volume
+        FROM stocks_candle
+        WHERE stock_code = #{stockCode}
+          AND stock_candle_day BETWEEN #{startDate} AND #{endDate}
+        ORDER BY stock_candle_day ASC
+    </select>
+
+    <insert id="upsertStockCandle">
+        INSERT INTO stocks_candle (stock_code, stock_candle_day, stock_candle_open, stock_candle_close,
+                                   stock_candle_high, stock_candle_low, stock_candle_volume)
+        VALUES (#{stockCode}, #{stockCandleDay}, #{stockCandleOpen}, #{stockCandleClose},
+                #{stockCandleHigh}, #{stockCandleLow}, #{stockCandleVolume})
+            ON DUPLICATE KEY UPDATE
+                                 stock_candle_open = VALUES(stock_candle_open),
+                                 stock_candle_close = VALUES(stock_candle_close),
+                                 stock_candle_high = VALUES(stock_candle_high),
+                                 stock_candle_low = VALUES(stock_candle_low),
+                                 stock_candle_volume = VALUES(stock_candle_volume)
+    </insert>
+</mapper>

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.kb.bank.mapper.BankMapper">
+
+    <resultMap id="BankResultMap" type="com.kb.bank.dto.Bank">
+        <id property="bankId" column="bank_id"/>
+        <result property="bankName" column="bank_name"/>
+        <result property="bankLogoUrl" column="bank_logo_url"/>
+        <result property="bankUrl" column="bank_url"/>
+        <result property="bankType" column="bank_type"/>
+    </resultMap>
+
+    <select id="getBankListByType" resultMap="BankResultMap">
+        SELECT
+            bank_id, bank_name, bank_logo_url, bank_url, bank_type
+        FROM
+            BANKS
+    </select>
+
+</mapper>

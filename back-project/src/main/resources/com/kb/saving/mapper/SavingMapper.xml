@@ -1,0 +1,320 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.kb.saving.mapper.SavingMapper">
+
+    <resultMap id="DepositDetailResultMap" type="com.kb.saving.dto.Saving">
+        <id property="savingId" column="saving_id"/>
+        <result property="rank" column="saving_rank"/>
+        <result property="bankId" column="bank_id"/>
+        <result property="financialProductCode" column="fin_prdt_cd"/>
+        <result property="savingName" column="saving_name"/>
+        <result property="disclosureStartDay" column="dcls_strt_day"/>
+        <result property="joinDeny" column="join_deny"/>
+        <result property="joinMember" column="join_member"/>
+        <result property="financialCategoryId" column="fin_category_id"/>
+        <result property="joinWay" column="join_way"/>
+        <result property="maturityInterest" column="mtrt_int"/>
+        <result property="note" column="etc_note"/>
+        <result property="maxPrimeRate" column="max_prime_rate"/>
+        <association property="bank" javaType="com.kb.bank.dto.Bank">
+            <result property="bankName" column="bank_name"/>
+            <result property="bankLogoUrl" column="bank_logo_url"/>
+            <result property="bankUrl" column="bank_url"/>
+        </association>
+        <collection property="interestRateList" ofType="com.kb.saving.dto.SavingInterestRate">
+            <id property="interestRateId" column="intr_rate_id"/>
+            <result property="savingId" column="saving_id"/>
+            <result property="interestRateType" column="intr_rate_type"/>
+            <result property="savingTerm" column="save_term"/>
+            <result property="interestRate" column="intr_rate"/>
+            <result property="interestMaxRate" column="intr_rate2"/>
+        </collection>
+        <collection property="primeRatesList" ofType="com.kb.saving.dto.SavingPrimeRate">
+            <id property="primeRateId" column="prime_rate_id"/>
+            <result property="primeRatePercent" column="prime_rate_percent"/>
+            <result property="primeRateDetail" column="prime_rate_detail"/>
+        </collection>
+
+    </resultMap>
+
+    <resultMap id="DepositListResultMap" type="com.kb.saving.dto.SavingListDTO">
+        <id property="savingId" column="saving_id"/>
+        <result property="savingName" column="saving_name"/>
+        <result property="joinDeny" column="join_deny"/>
+        <result property="joinWay" column="join_way"/>
+
+        <association property="bank" javaType="com.kb.bank.dto.Bank">
+            <result property="bankId" column="bank_id"/>
+            <result property="bankName" column="bank_name"/>
+            <result property="bankLogoUrl" column="bank_logo_url"/>
+            <result property="bankUrl" column="bank_url"/>
+        </association>
+
+        <association property="interestRateList" javaType="com.kb.saving.dto.SavingInterestRate">
+            <result property="interestRateId" column="intr_rate_id"/>
+            <result property="savingId" column="saving_id"/>
+            <result property="interestRateType" column="intr_rate_type"/>
+            <result property="savingTerm" column="save_term"/>
+            <result property="interestRate" column="intr_rate"/>
+            <result property="interestMaxRate" column="intr_rate2"/>
+        </association>
+    </resultMap>
+
+    <resultMap id="getProductViewLogResultMap" type="com.kb.saving.dto.SavingProductViewLogDto">
+        <result property="savingId" column="saving_id"/>
+        <result property="userId" column="user_id"/>
+        <result property="wmtiType" column="invest_type"/>
+        <result property="viewedAt" column="viewed_at"/>
+    </resultMap>
+
+
+    <select id="getProductList" resultMap="DepositListResultMap">
+        SELECT
+        s.saving_id,
+        s.saving_name,
+        s.join_deny,
+        s.join_way,
+        b.bank_id,
+        b.bank_name,
+        b.bank_logo_url,
+        b.bank_url,
+        ir.intr_rate_id,
+        ir.intr_rate_type,
+        ir.save_term,
+        ir.intr_rate,
+        ir.intr_rate2
+        FROM savings_products AS s
+        INNER JOIN banks AS b ON s.bank_id = b.bank_id
+        LEFT JOIN (
+        SELECT ir1.*
+        FROM saving_interest_rates ir1
+        INNER JOIN (
+        SELECT saving_id, MAX(intr_rate2) AS max_intr_rate2
+        FROM saving_interest_rates
+        GROUP BY saving_id
+        ) ir2 ON ir1.saving_id = ir2.saving_id AND ir1.intr_rate2 = ir2.max_intr_rate2
+        ) AS ir ON s.saving_id = ir.saving_id
+        WHERE s.fin_category_id = #{finCategoryId}
+
+        <if test="searchValue != null">
+            AND s.saving_name LIKE CONCAT('%', #{searchValue}, '%')
+        </if>
+        <if test="bankNameList != null and !bankNameList.isEmpty()">
+            AND b.bank_name IN
+            <foreach item="name" collection="bankNameList" open="(" separator="," close=")">
+                #{name}
+            </foreach>
+        </if>
+        <if test="saveTerm != null">
+            AND ir.save_term = #{saveTerm}
+        </if>
+        <if test="interestRateType != null">
+            AND ir.intr_rate_type = #{interestRateType}
+        </if>
+
+        ORDER BY
+        b.bank_type = 1 DESC,
+        CASE WHEN b.bank_type = 1 THEN ir.intr_rate2 END DESC,
+        b.bank_type,
+        ir.intr_rate2 DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="getProductDetail" resultMap="DepositDetailResultMap" parameterType="int">
+        <![CDATA[
+        SELECT
+            s.saving_id,
+            ROW_NUMBER() OVER (PARTITION BY s.fin_category_id ORDER BY s.max_prime_rate) AS saving_rank,
+                s.bank_id,
+            s.saving_name,
+            s.dcls_strt_day,
+            s.join_deny,
+            s.join_member,
+            s.fin_category_id,
+            s.join_way,
+            s.mtrt_int,
+            s.etc_note,
+            s.max_prime_rate,
+            b.bank_name,
+            b.bank_logo_url,
+            b.bank_url,
+            ir.intr_rate_id,
+            ir.intr_rate_type,
+            ir.save_term,
+            ir.intr_rate,
+            ir.intr_rate2,
+            pr.prime_rate_id,
+            pr.prime_rate_percent,
+            pr.prime_rate_detail
+        ]]>
+        FROM savings_products AS s
+                 INNER JOIN banks AS b ON s.bank_id = b.bank_id
+                 LEFT JOIN saving_interest_rates AS ir ON s.saving_id = ir.saving_id
+                 LEFT JOIN saving_prime_Rates AS pr ON s.saving_id = pr.saving_id
+        WHERE s.fin_category_id = #{finCategoryId} AND s.saving_id = #{savingId}
+        ORDER BY s.max_prime_rate DESC;
+    </select>
+
+    <select id="getTotalCount" resultType="int">
+        SELECT COUNT(*)
+        FROM savings_products AS s
+        INNER JOIN banks AS b ON s.bank_id = b.bank_id
+        LEFT JOIN saving_interest_rates AS ir ON s.saving_id = ir.saving_id
+        WHERE s.fin_category_id = #{finCategoryId}
+
+        <if test="searchValue != null and searchValue !=''">
+            AND s.saving_name LIKE CONCAT('%', #{searchValue}, '%')
+        </if>
+        <if test="bankNameList != null and !bankNameList.isEmpty() > 0">
+            AND b.bank_name IN
+            <foreach item="name" collection="bankNameList" open="(" separator="," close=")">
+                #{name}
+            </foreach>
+        </if>
+        <if test="saveTerm != null">
+            AND ir.save_term = #{saveTerm}
+        </if>
+        <if test="interestRateType != null">
+            AND ir.intr_rate_type = #{interestRateType}
+        </if>
+    </select>
+
+    <select id="getTopProductList" resultMap="DepositDetailResultMap" parameterType="int">
+        SELECT s.saving_id,
+               s.bank_id,
+               s.saving_name,
+               s.dcls_strt_day,
+               s.join_deny,
+               s.join_member,
+               s.fin_category_id,
+               s.join_way,
+               s.mtrt_int,
+               s.etc_note,
+               s.max_prime_rate,
+               b.bank_id,
+               b.bank_logo_url,
+               b.bank_url,
+               MIN(sir.intr_rate2) AS intr_rate2,
+               b.bank_name  ,
+               MIN(sir.intr_rate_type) AS intr_rate_type,
+               MIN(sir.save_term) AS save_term
+        FROM savings_products s
+                 JOIN saving_interest_rates sir ON s.saving_id = sir.saving_id
+                 JOIN banks b ON s.bank_id = b.bank_id
+        WHERE s.fin_category_id = 1
+        GROUP BY s.saving_id
+        ORDER BY intr_rate2 DESC
+            LIMIT 3;
+    </select>
+
+    <select id="getTopProductListByViewCount" resultMap="DepositDetailResultMap" parameterType="int">
+            SELECT s.saving_id,
+                   s.bank_id,
+                   s.saving_name,
+                   s.dcls_strt_day,
+                   s.join_deny,
+                   s.join_member,
+                   s.fin_category_id,
+                   s.join_way,
+                   s.mtrt_int,
+                   s.etc_note,
+                   s.max_prime_rate,
+                   b.bank_id,
+                   b.bank_logo_url,
+                   b.bank_url,
+                   MIN(sir.intr_rate2) AS intr_rate2,
+                   b.bank_name  ,
+                   MIN(sir.intr_rate_type) AS intr_rate_type,
+                   MIN(sir.save_term) AS save_term,
+                   SUM(COALESCE(pwvc.view_count, 0)) AS total_view_count
+            FROM savings_products s
+                     JOIN saving_interest_rates sir ON s.saving_id = sir.saving_id
+                     JOIN banks b ON s.bank_id = b.bank_id
+                     LEFT JOIN product_wmti_view_counts pwvc ON s.saving_id = pwvc.saving_id
+            WHERE s.fin_category_id = #{finCategoryId}
+            GROUP BY s.saving_id
+            ORDER BY total_view_count DESC
+            LIMIT 3
+    </select>
+
+    <select id="getTopProductListByInvestType" resultMap="DepositDetailResultMap" parameterType="com.kb.saving.dto.SavingTopRequestDTO" >
+        SELECT s.saving_id,
+               s.bank_id,
+               s.saving_name,
+               s.dcls_strt_day,
+               s.join_deny,
+               s.join_member,
+               s.fin_category_id,
+               s.join_way,
+               s.mtrt_int,
+               s.etc_note,
+               s.max_prime_rate,
+               b.bank_id,
+               b.bank_logo_url,
+               b.bank_url,
+               MIN(sir.intr_rate2) AS intr_rate2,
+               b.bank_name  ,
+               MIN(sir.intr_rate_type) AS intr_rate_type,
+               MIN(sir.save_term) AS save_term
+        FROM savings_products s
+                 JOIN saving_interest_rates sir ON s.saving_id = sir.saving_id
+                 JOIN banks b ON s.bank_id = b.bank_id
+                 LEFT JOIN product_wmti_view_counts pwvc ON s.saving_id = pwvc.saving_id AND pwvc.invest_type = #{investType}
+        WHERE s.fin_category_id = #{finCategoryId}
+        GROUP BY s.saving_id
+        ORDER BY pwvc.view_count DESC
+        LIMIT 3
+    </select>
+
+
+    <select id="getTopSavingsProductList" resultMap="DepositDetailResultMap">
+        SELECT s.saving_id,
+               s.bank_id,
+               s.saving_name,
+               s.dcls_strt_day,
+               s.join_deny,
+               s.join_member,
+               s.fin_category_id,
+               s.join_way,
+               s.mtrt_int,
+               s.etc_note,
+               s.max_prime_rate,
+               MIN(sir.intr_rate2) AS intr_rate2,
+               b.bank_name,
+               MIN(sir.intr_rate_type) AS intr_rate_type,
+               MIN(sir.save_term) AS save_term
+        FROM savings_products s
+                 JOIN saving_interest_rates sir ON s.saving_id = sir.saving_id
+                 JOIN banks b ON s.bank_id = b.bank_id
+        WHERE s.fin_category_id = 2
+        GROUP BY s.saving_id
+        ORDER BY intr_rate2 DESC
+            LIMIT 3;
+    </select>
+
+    <insert id="updateSavingProductViewByWmti" parameterType="com.kb.saving.dto.SavingProductViewUpdateDto">
+        INSERT INTO product_wmti_view_counts (saving_id, invest_type, view_count)
+        VALUES (#{savingId}, #{wmtiType}, 1)
+        ON DUPLICATE KEY UPDATE view_count = view_count + 1
+    </insert>
+
+    <select id="checkSavingProductViewByWmtiAndUserid" resultType="int">
+        SELECT COUNT(*)
+        FROM product_view_logs
+        WHERE mno = #{userId}
+          AND saving_id = #{savingId}
+          AND viewed_at > NOW() - INTERVAL 1 HOUR  -- 1시간 이내에 조회된 기록만 확인
+    </select>
+
+    <insert id="updateProductViewLog" parameterType="com.kb.saving.dto.SavingProductViewLogDto">
+        INSERT INTO product_view_logs (saving_id, mno, invest_type, viewed_at)
+        VALUES (#{savingId}, #{userId}, #{wmtiType}, NOW())
+        ON DUPLICATE KEY UPDATE viewed_at = NOW()
+    </insert>
+
+
+
+</mapper>

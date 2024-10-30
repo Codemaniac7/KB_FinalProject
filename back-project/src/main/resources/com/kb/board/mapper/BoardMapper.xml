@@ -1,0 +1,377 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.kb.board.mapper.BoardMapper">
+
+
+    <resultMap type="com.kb.board.dto.BoardCategory" id="boardCategoryMap">
+        <id property="id" column="id"/>
+        <result property="type" column="type"/>
+        <result property="name" column="name"/>
+        <result property="level" column="level"/>
+        <result property="orderNo" column="order_no"/>
+    </resultMap>
+
+
+    <resultMap type="com.kb.board.dto.BoardDTO" id="boardResultMap">
+        <id property="bno" column="bno"/>
+        <result property="type" column="type"/>
+        <result property="title" column="title"/>
+        <result property="content" column="content"/>
+        <result property="status" column="status"/>
+    </resultMap>
+
+    <resultMap type="com.kb.board.dto.BoardPost" id="boardPostResultMap">
+        <id property="postId" column="post_id"/>
+        <result property="bno" column="bno"/>
+        <result property="title" column="title"/>
+        <result property="content" column="content"/>
+        <result property="status" column="status"/>
+        <result property="readCount" column="read_count"/>
+        <result property="createdDate" column="created_date"/>
+        <result property="modifiedDate" column="modified_date"/>
+        <result property="type" column="type"/>
+        <result property="commentCount" column="comment_count"/>
+        <result property="likesCount" column="likes_count"/>
+        <result property="mno" column="mno"/>
+    </resultMap>
+
+    <resultMap type="com.kb.board.dto.BoardAttachFile" id="boardAttachFileResultMap">
+        <id property="fno" column="fno"/>
+        <result property="postId" column="post_id"/>
+        <result property="originalFilename" column="original_filename"/>
+        <result property="renamedFilename" column="renamed_filename"/>
+        <result property="contentType" column="content_type"/>
+        <result property="size" column="size"/>
+        <result property="createDate" column="create_date"/>
+    </resultMap>
+
+
+    <resultMap type="com.kb.board.dto.BoardReply" id="boardReplyResultMap">
+        <result property="rno" column="rno" />
+        <result property="postId" column="post_id" />
+        <result property="mno" column="mno" />
+        <result property="memberId" column="member_id" />
+        <result property="content" column="content" />
+        <result property="status" column="status" />
+        <result property="createDate" column="create_date" />
+        <result property="modifyDate" column="modify_date" />
+    </resultMap>
+    <resultMap id="postResultMap" type="com.kb.board.dto.BoardPost">
+        <result property="postId" column="post_id"/>
+        <result property="title" column="title"/>
+        <result property="content" column="content"/>
+        <result property="bno" column="bno"/>
+        <result property="status" column="status"/>
+        <result property="type" column="type"/>
+        <result property="authorId" column="author_id"/> <!-- authorId는 남겨두기 -->
+        <result property="readCount" column="read_count"/>
+        <result property="likesCount" column="likes_count"/>
+        <result property="commentCount" column="comment_count"/>
+        <result property="createdDate" column="created_date"/>
+        <result property="modifiedDate" column="modified_date"/>
+        <result property="replyContent" column="reply_content"/>
+
+        <collection property="boardAttachFileList" ofType="com.kb.board.dto.BoardAttachFile" column="post_id"
+                    select="selectAttachFileByFno"/>
+    </resultMap>
+
+
+    <select id="selectBoardCategory" resultMap="boardCategoryMap">
+        SELECT * FROM board_category ORDER BY id;
+    </select>
+
+    <select id="selectBoardList" parameterType="com.kb.board.dto.BoardParam" resultMap="boardResultMap">
+        <![CDATA[
+        SELECT
+            b.bno, b.type, b.title, b.content, b.status
+        FROM board b
+        WHERE
+            b.status = 'y'
+        ORDER BY b.bno DESC
+            LIMIT #{limit} OFFSET #{offset}
+        ]]>
+    </select>
+
+    <select id="selectBoardCount" parameterType="com.kb.board.dto.BoardParam" resultType="int">
+        <![CDATA[
+        SELECT COUNT(DISTINCT b.bno)
+        FROM board b
+        WHERE
+            b.status = 'y'
+        ]]>
+    </select>
+
+    <select id="selectBoardByBno" parameterType="int" resultMap="boardPostResultMap">
+        SELECT
+            bp.post_id AS postId,
+            bp.bno AS bno,
+            bp.title AS title,
+            bp.content AS content,
+            bp.status AS status
+        FROM board_post bp
+        WHERE bp.bno = #{bno} AND bp.status = 'y'
+    </select>
+
+
+    <select id="selectPostCount" resultType="int">
+        SELECT COUNT(*)
+        FROM board_post
+        WHERE bno = #{bno}
+        <!-- 추가적인 조건이 필요하다면 여기에 작성 -->
+    </select>
+
+    <select id="selectPostList" resultMap="postResultMap" parameterType="com.kb.board.dto.PostParam">
+        SELECT
+            bp.post_id,
+            bp.bno,
+            bp.title,
+            bp.content,
+            bp.read_count,
+            bp.created_date,
+            bp.modified_date,
+            bp.type,
+            bp.status,
+            bp.comment_count,
+            bp.mno,
+            m.id,
+            m.name,
+            baf.fno,
+            baf.original_filename,
+            baf.renamed_filename,
+            baf.content_type,
+            baf.size,
+            baf.create_date
+        FROM
+            board_post bp
+                LEFT JOIN member m ON bp.mno = m.mno
+                LEFT JOIN board_attach_file baf ON bp.post_id = baf.post_id
+        WHERE
+            bp.bno = #{bno} AND bp.status = 'y'
+        ORDER BY
+            bp.created_date DESC
+            LIMIT #{limit} OFFSET #{offset}
+    </select>
+    <select id="mySelectPostList" resultMap="postResultMap" parameterType="com.kb.board.dto.PostParam">
+        SELECT
+            bp.post_id,
+            bp.bno,
+            bp.title,
+            bp.content,
+            bp.read_count,
+            bp.created_date,
+            bp.modified_date,
+            bp.type,
+            bp.status,
+            bp.comment_count,
+            bp.mno,
+            m.id,
+            m.name,
+            baf.fno,
+            baf.original_filename,
+            baf.renamed_filename,
+            baf.content_type,
+            baf.size,
+            baf.create_date
+        FROM
+            board_post bp
+                LEFT JOIN member m ON bp.mno = m.mno
+                LEFT JOIN board_attach_file baf ON bp.post_id = baf.post_id
+        WHERE
+            bp.status = 'y'
+          and bp.author_id = #{memberId}
+        ORDER BY
+            bp.created_date DESC;
+    </select>
+
+
+    <!-- 게시글 조회시 readCount 갱신용 -->
+    <update id="updateReadCount" parameterType="com.kb.board.dto.BoardPost">
+        update board_post set
+            read_count = #{readCount}
+        where post_id = #{postId}
+    </update>
+
+    <update id="deleteBoard" parameterType="java.lang.Long">
+        <![CDATA[
+        UPDATE board_post
+        SET status = 'n'
+        WHERE post_id = #{postId}
+        ]]>
+    </update>
+
+    <!-- 파일 가져오기 -->
+    <select id="selectAttachFileByFno" parameterType="long" resultMap="boardAttachFileResultMap">
+        select
+            fno, post_id, original_filename, renamed_filename, content_type, size, create_date
+        from board_attach_file
+        where post_id = #{postId}
+    </select>
+
+    <!-- 파일 리스트 -->
+    <select id="selectAttachFileByPostId" resultMap="boardAttachFileResultMap">
+        select
+            fno, post_id, original_filename, renamed_filename, content_type, size, create_date
+        from board_attach_file
+        where post_id = #{postId}
+    </select>
+
+    <!-- 파일 첨부 -->
+    <insert id="insertAttachFile" parameterType="com.kb.board.dto.BoardAttachFile">
+        INSERT INTO BOARD_ATTACH_FILE
+        (fno, post_id, original_filename, renamed_filename, content_type, size, create_date)
+        VALUES(default, #{postId}, #{originalFilename}, #{renamedFilename}, #{contentType}, #{size}, DEFAULT)
+    </insert>
+
+    <!-- 파일 삭제 -->
+    <delete id="deleteAttachFile" parameterType="long">
+        delete from board_attach_file where fno = #{fno}
+    </delete>
+
+    <!-- 댓글 등록 -->
+    <insert id="insertReply" parameterType="com.kb.board.dto.BoardReply">
+        <!-- 삽입 후 자동 생성된 rno 값을 가져오기 위해 selectKey 사용 -->
+        <selectKey keyProperty="rno" resultType="int" order="AFTER">
+            SELECT LAST_INSERT_ID() as rno
+        </selectKey>
+        insert into board_reply (
+        post_id, mno, member_id, content, status, create_date, modify_date
+        ) VALUES (
+        #{postId}, #{mno}, #{memberId}, #{content}, default, default, default
+        )
+    </insert>
+
+
+    <!-- 댓글 리스트 -->
+    <select id="selectReplyByBno" resultMap="boardReplyResultMap" >
+        select
+            r.rno, r.post_id, r.content, m.id as member_id, m.name, r.create_date, r.modify_date
+        from board_reply r
+                 join member m on(r.mno = m.mno)
+        where r.status='y' and r.post_id = #{postId}
+        order by r.create_date desc
+    </select>
+
+    <select id="selectBoardPostList" parameterType="com.kb.board.dto.BoardParam" resultMap="boardPostResultMap">
+        <![CDATA[
+        SELECT
+            bp.post_id,
+            bp.bno,
+            bp.title,
+            bp.content,
+            bp.read_count,
+            bp.created_date,
+            bp.modified_date,
+            bp.type,
+            bp.status,
+            bp.comment_count,
+            bp.likes_count,
+            bp.mno
+
+        FROM board_post bp
+        ORDER BY bp.post_id DESC
+            LIMIT #{limit} OFFSET #{offset}
+        ]]>
+    </select>
+
+    <select id="selectBoardPostByPostId" parameterType="java.lang.Long" resultMap="boardPostResultMap">
+        <![CDATA[
+        SELECT
+            bp.post_id AS postId,
+            bp.bno AS bno,
+            bp.title AS title,
+            bp.content AS content,
+            bp.read_count AS readCount,
+            bp.created_date AS createdDate,
+            bp.modified_date AS modifiedDate,
+            bp.type AS type,
+            bp.status AS status,
+            bp.comment_count AS commentCount,
+            bp.mno AS mno,
+            bp.likes_count AS likesCount
+        FROM board_post bp
+        WHERE bp.post_id = #{postId}
+        ]]>
+    </select>
+
+    <insert id="insertBoardPost" parameterType="com.kb.board.dto.BoardPost">
+        <selectKey keyProperty="postId" resultType="Long" order="AFTER">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+        <![CDATA[
+    INSERT INTO board_post (bno, title, content, mno, type, status, author_id, created_date)
+    VALUES (#{bno}, #{title}, #{content}, #{mno}, #{type},
+            COALESCE(#{status}, 'y'), #{authorId}, #{createdDate})
+    ]]>
+    </insert>
+
+    <update id="updateBoardPost" parameterType="com.kb.board.dto.BoardPost">
+        <![CDATA[
+        UPDATE board_post
+        SET title = #{title},
+            content = #{content},
+            modified_date = CURRENT_TIMESTAMP,
+            type = #{type},
+            status = COALESCE(#{status}, 'y')
+        WHERE post_id = #{postId}
+        ]]>
+    </update>
+
+    <update id="deleteBoardPost" parameterType="java.lang.Long">
+        <![CDATA[
+        DELETE FROM board_post WHERE post_id = #{postId}
+        ]]>
+    </update>
+
+    <update id="incrementLikesCount" parameterType="java.lang.Long">
+        UPDATE board_post SET likes_count = likes_count + 1 WHERE post_id = #{postId}
+    </update>
+
+    <select id="selectReplyByRno" parameterType="Long" resultMap="boardReplyResultMap">
+        select
+            r.rno, r.post_id, r.content, m.id as member_id, m.name, r.create_date, r.modify_date
+        from board_reply r
+                 join member m on(r.mno = m.mno)
+        where r.status='y' and r.rno = #{rno}
+    </select>
+
+    <delete id="deleteReply" parameterType="Integer">
+        delete from board_reply where rno = #{rno}
+    </delete>
+
+    <select id="getAuthorIdByMno" parameterType="Integer" resultType="string">
+        select id from member where mno = #{mno}
+    </select>
+
+    <!-- 게시글 조회 -->
+    <select id="getBoardPost" parameterType="long" resultType="com.kb.board.dto.BoardPost">
+        SELECT *
+        FROM board_post
+        WHERE post_id = #{postId}
+    </select>
+
+    <!-- 특정 게시물에 대한 사용자의 좋아요 여부 확인 -->
+    <select id="checkLikeExists" parameterType="map" resultType="boolean">
+        SELECT EXISTS (
+            SELECT 1
+            FROM likes
+            WHERE post_id = #{postId} AND mno = #{mno}
+        )
+    </select>
+
+    <!-- 좋아요 추가 -->
+    <insert id="insertLike" parameterType="map">
+        INSERT INTO likes (post_id, mno)
+        VALUES (#{postId, jdbcType=BIGINT}, #{mno, jdbcType=INTEGER})
+    </insert>
+
+    <!-- 특정 게시물의 좋아요 수 계산 -->
+    <select id="countLikes" parameterType="java.lang.Long" resultType="int">
+        SELECT COUNT(*)
+        FROM likes
+        WHERE post_id = #{postId, jdbcType=BIGINT}
+    </select>
+
+</mapper>

@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.kb.gold.mapper.GoldMapper">
+
+    <resultMap id="GoldInfoResultMap" type="com.kb.gold.dto.GoldDto">
+        <result property="basDd" column="bas_dd"/>
+        <result property="isuCd" column="isu_cd"/>
+        <result property="cmpPrevDdPrc" column="cmp_prev_dd_prc"/>
+        <result property="flucRt" column="fluc_rt"/>
+        <result property="tddOpnPrc" column="tdd_opn_prc"/>
+        <result property="price" column="price"/>
+    </resultMap>
+
+    <insert id="insertGoldDataBatch" parameterType="list">
+        INSERT INTO gold_data
+        (bas_dd, isu_cd, isu_nm, tdd_cls_prc, cmp_prev_dd_prc, fluc_rt, tdd_opn_prc,
+        tdd_hg_prc, tdd_lw_prc, acc_trd_vol, acc_trd_val)
+        VALUES
+        <foreach collection="list" item="goldData" separator=",">
+            (#{goldData.basDd}, #{goldData.isuCd}, #{goldData.isuNm},
+            #{goldData.tddClsPrc}, #{goldData.cmpPrevDdPrc}, #{goldData.flucRt},
+            #{goldData.tddOpnPrc}, #{goldData.tddHgPrc}, #{goldData.tddLwPrc},
+            #{goldData.accTrdVol}, #{goldData.accTrdVal})
+        </foreach>
+    </insert>
+
+    <select id="getTotalCount" resultType="int">
+        SELECT
+            count(*)
+        FROM
+            gold_data
+        WHERE
+            isu_cd = "04020000"
+    </select>
+
+    <select id="getGoldInfoList" resultMap="GoldInfoResultMap" parameterType="com.kb.gold.dto.GoldParam">
+        SELECT
+            bas_dd, isu_cd, cmp_prev_dd_prc, fluc_rt, tdd_opn_prc, CAST(tdd_opn_prc AS DECIMAL(10, 2)) * 3.75 AS price
+        FROM
+            gold_data
+        WHERE isu_cd = "04020000"
+        ORDER BY bas_dd desc
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+</mapper>

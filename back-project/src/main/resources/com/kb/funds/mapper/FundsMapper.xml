@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.kb.funds.mapper.FundsMapper">
+    <!-- 펀드 추가 -->
+    <insert id="insertFund" parameterType="com.kb.funds.dto.FundsDTO">
+        <selectKey keyProperty="id" resultType="long" order="AFTER">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+        INSERT IGNORE INTO funds (fundFnm, gijunGa, gijunYmd, suikRt1, suikRt3, suikRt6, suikRt12, investGrade, feeTot, bmNm, navTot, fundCd)
+        VALUES (#{fundFnm}, #{gijunGa}, #{gijunYmd}, #{suikRt1}, #{suikRt3}, #{suikRt6}, #{suikRt12}, #{investGrade}, #{feeTot}, #{bmNm}, #{navTot}, #{fundCd})
+    </insert>
+    <!-- 펀드 업데이트 -->
+    <update id="updateFund" parameterType="com.kb.funds.dto.FundsDTO">
+        UPDATE funds
+        SET
+            fundFnm = #{fundFnm},
+            gijunGa = #{gijunGa},
+            gijunYmd = #{gijunYmd},
+            suikRt1 = #{suikRt1},
+            suikRt3 = #{suikRt3},
+            suikRt6 = #{suikRt6},
+            suikRt12 = #{suikRt12},
+            investGrade = #{investGrade},
+            feeTot = #{feeTot},
+            bmNm = #{bmNm},
+            navTot = #{navTot},
+            fundCd = #{fundCd}
+        WHERE id = #{id}
+    </update>
+    <!--    &lt;!&ndash; ID로 펀드 존재 여부 확인 &ndash;&gt;-->
+    <!--    <select id="existsById" resultType="boolean" parameterType="Long">-->
+    <!--        SELECT COUNT(*) > 0-->
+    <!--        FROM funds-->
+    <!--        WHERE id = #{id}-->
+    <!--    </select>-->
+    <resultMap id="FundsResultMap" type="com.kb.funds.dto.FundsDTO">
+        <id property="id" column="id"/>
+        <result property="fundFnm" column="fundFnm"/>
+        <result property="gijunGa" column="gijunGa"/>
+        <result property="gijunYmd" column="gijunYmd"/>
+        <result property="suikRt1" column="suikRt1"/>
+        <result property="suikRt3" column="suikRt3"/>
+        <result property="suikRt6" column="suikRt6"/>
+        <result property="suikRt12" column="suikRt12"/>
+        <result property="investGrade" column="investGrade"/>
+        <result property="feeTot" column="feeTot"/>
+        <result property="bmNm" column="bmNm"/>
+        <result property="navTot" column="navTot"/>
+        <result property="fundCd" column="fundCd"/>
+    </resultMap>
+    <!-- 키워드로 펀드 검색 -->
+    <select id="searchFunds" resultMap="FundsResultMap">
+        SELECT f.*
+        FROM funds f
+        WHERE f.fundFnm LIKE CONCAT('%', #{keyword}, '%');
+    </select>
+    <!-- 모든 펀드 조회 -->
+    <select id="findAllFunds" resultMap="FundsResultMap">
+        SELECT f.*
+        FROM funds f;
+    </select>
+</mapper>
