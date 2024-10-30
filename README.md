@@ -3,7 +3,6 @@
 
 # 📈 iNVeTI
 - KB국민은행에서 주관한 KB IT's Your Life 교육과정에서 진행한 금융 웹프로젝트
-![image](https://github.com/user-attachments/assets/2e3b5b73-7cba-4d86-b4f0-2330a6551328)
 
 ### iNVeTI
 : 투자 입문자들을 위한 통합된 금융 정보와 각 성향에 맞춘 투자 상품 제공
@@ -43,13 +42,9 @@
 - [ ] 카카오 로그인 수정
 
 ## 📱 실행 화면
-![image](https://github.com/user-attachments/assets/cc2e66ab-69ad-4020-b67d-9a97376ef11c)
-![image](https://github.com/user-attachments/assets/4e5239f6-6bf6-45d0-9c58-890244bfe635)
-![image](https://github.com/user-attachments/assets/fe639ebc-8f63-4a1a-b6ac-fe2f7ae5218f)
-![image](https://github.com/user-attachments/assets/95e5fa83-7671-4920-b966-f5e7fb51ae0c)
-![image](https://github.com/user-attachments/assets/d89dbbf6-68f9-4227-ae49-b9d8968514d4)
-![image](https://github.com/user-attachments/assets/301ff5c0-bcca-4278-88df-9c3c439683f0)
-![image](https://github.com/user-attachments/assets/69f72fde-87f1-4818-b29e-d5c82849f276)
-![image](https://github.com/user-attachments/assets/197bf004-db96-4a7c-a42d-65060729f911)
-![image](https://github.com/user-attachments/assets/f81a9db7-07c6-4c42-8124-bd90bcb7acf5)
-![image](https://github.com/user-attachments/assets/b7563208-c9aa-4c6d-94e4-0cfbbea01b57)
+![image](https://github.com/user-attachments/assets/f0f06de1-08e4-466e-af7b-9f41bd5eb106)
+![image](https://github.com/user-attachments/assets/859410f7-c5cd-47df-8f7f-565208b9ac0a)
+![image](https://github.com/user-attachments/assets/fff40f9f-f34a-4bab-9106-e48c28df63f2)
+![image](https://github.com/user-attachments/assets/65983cdd-cc81-4e70-b8e7-8137f8a60cce)
+![image](https://github.com/user-attachments/assets/0c5c333c-98ac-4aa3-aca1-49baeb37aad8)
+
