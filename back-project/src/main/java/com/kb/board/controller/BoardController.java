@@ -222,6 +222,15 @@ public class BoardController {
     }
 
 
+    // 좋아요 상태 확인
+    @GetMapping("/{postId}/like-status")
+    public ResponseEntity<Boolean> checkLikeStatus(@PathVariable Long postId, @AuthenticationPrincipal Member principal) {
+        int mno = principal.getMno();
+        boolean alreadyLiked = boardService.checkLikeExists(postId, mno);
+        return ResponseEntity.ok(alreadyLiked);
+    }
+
+
     // 좋아요 수 가져오기
 //    @GetMapping("/{postId}/likes")
 //    public ResponseEntity<Integer> getLikesCount(@PathVariable Long postId) {
