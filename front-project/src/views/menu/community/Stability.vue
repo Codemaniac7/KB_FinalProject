@@ -43,23 +43,42 @@ const fetchReplies = async (postId) => {
 
 const fetchBoardPosts = async () => {
   try {
+    const authData = JSON.parse(localStorage.getItem("auth"));
+    const token = authData?.token; // auth 객체에서 token 값 추출
+    if (!token) {
+    console.error("JWT Token is missing");
+    return;
+    }
+    if (token && token.split('.').length !== 3) {
+      console.error("Invalid JWT token format");
+    }
     const response = await axios.get(`/api/board/${postType.value}/posts`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
       timeout: 5000,
     });
     console.log("API 응답:", response.data); // API 응답 로그 추가
-    posts.value = response.data.postList.map(post => ({
-      ...post,
-      isLiked: post.isLiked || false,
-      likesCount: post.likesCount || 0 // 좋아요 수 추가
+    posts.value = await Promise.all(response.data.postList.map(async post => {
+      const likeStatusResponse = await axios.get(`/api/board/${post.postId}/like-status`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return {
+        ...post,
+        isLiked: likeStatusResponse.data, // 좋아요 상태
+        likesCount: post.likesCount || 0, // 좋아요 수
+      };
     }));
 
-    // 댓글을 가져오는 부분
     await Promise.all(posts.value.map(post => fetchReplies(post.postId)));
 
   } catch (error) {
     console.error("Error fetching posts:", error);
   }
 };
+
 
 
 // 보여질 게시글 계산
@@ -100,7 +119,6 @@ const handleReply = async (index) => {
   }
 };
 
-
 // 더 많은 게시글 로드하는 함수
 const loadMore = () => {
   visibleCount.value += 5;
@@ -108,11 +126,23 @@ const loadMore = () => {
 
 const handleLike = async (index) => {
   const postId = posts.value[index].postId;
+  const authData = JSON.parse(localStorage.getItem("auth"));
+  const token = authData?.token; // auth 객체에서 token 값 추출
+  if (token && token.split('.').length !== 3) {
+  console.error("Invalid JWT token format");
+  }
   if (postId) {
     try {
-      const response = await api.likePost(postId);
-      posts.value[index] = response.data; // 서버에서 업데이트된 데이터를 받아옴
-      posts.value[index].isLiked = true; // 사용자 좋아요 상태 업데이트
+      const response = await axios.post(`/api/board/${postId}/like`, null, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      posts.value[index] = {
+        ...posts.value[index],
+        isLiked: true,
+        likesCount: response.data.likesCount,
+      };
     } catch (error) {
       if (error.response && error.response.status === 409) {
         alert("이미 좋아요를 눌렀습니다.");
@@ -124,6 +154,9 @@ const handleLike = async (index) => {
 };
 
 
+const showReply = (e) => {
+  console.log(e);
+}
 
 const openEditModal = (index) => {
   editPost.value = { ...posts.value[index] }; // 선택된 게시물 데이터 복사
@@ -242,7 +275,7 @@ onMounted(() => {
           </div>
           <input type="hidden" :value="post.postId" :ref="postRefs">
           <div class="d-flex align-items-center">
-            <a class="btn btn-sm btn-color-muted btn-active-light-primary fw-bolder fs-6 py-1 px-2 me-4">
+            <a class="btn btn-sm btn-color-muted btn-active-light-primary fw-bolder fs-6 py-1 px-2 me-4" @click="showReply">
               <i class="ai-message fs-2"></i>{{  (replies[post.postId] || []).length  }}
             </a>
             <a
@@ -253,7 +286,9 @@ onMounted(() => {
               }"
               @click="handleLike(index)"
               >
-              <i class="ai-heart fs-2"></i>{{ post.likesCount }}
+              <i :class="post.isLiked ? 'ai-heart-filled' : 'ai-heart'" 
+            :style="{ color: post.isLiked ? 'red' : 'inherit',  fontSize: '2em' }"></i>{{ post.likesCount }}
+
             </a>
           </div>
         </div>
